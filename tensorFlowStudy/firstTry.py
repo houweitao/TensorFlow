@@ -15,9 +15,18 @@ from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 
+
+def generate_data():
+    x = np.random.rand(100).astype(np.float32)
+    y = x_data * 2 + 0.3
+    return x, y
+
+
 # create data
 x_data = np.random.rand(100).astype(np.float32)
 y_data = x_data * 2 + 0.3
+
+# x_data, y_data = generate_data()
 
 print(x_data)
 print(y_data)
@@ -46,4 +55,4 @@ for step in range(201):
     if step % 20 == 0:
         print(step, sess.run(Weights), sess.run(biases))
 
-# 2016年10月23日03:10:25
+        # 2016年10月23日03:10:25
