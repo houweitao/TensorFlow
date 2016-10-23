@@ -10,8 +10,12 @@ import tensorflow as tf
 
 # activation_function=None : means 为线性函数
 def add_layer(inputs, in_size, out_size, activation_function=None):
-    Weights = tf.Variable(tf.random_normal([in_size, out_size]))
-    biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
+    # Weights = tf.Variable(tf.random_normal([in_size, out_size]))
+    # biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
+
+    Weights = tf.Variable(tf.zeros([in_size, out_size]))
+    biases = tf.Variable(tf.zeros([out_size]))
+
     res = tf.matmul(inputs, Weights) + biases
     if activation_function is None:
         outputs = res
