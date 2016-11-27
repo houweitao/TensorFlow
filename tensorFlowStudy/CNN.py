@@ -69,6 +69,10 @@ hidden_layer_pool2 = max_poll_2x2(hidden_layer_conv2)  # output 因为步长是2
 W_fc1 = weight_variable([7 * 7 * 64, 1024])
 b_fc1 = bias_variable([1024])
 
+# If one component of `shape` is the special value -1,
+# the size of that dimension is computed so that the total size remains constant.
+# In particular, a `shape` of `[-1]` flattens into 1-D.
+# At most one component of `shape` can be -1.
 h_pool2_flat = tf.reshape(hidden_layer_pool2, [-1, 7 * 7 * 64])  # 打平,3维到1维
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
