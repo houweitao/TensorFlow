@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: load_data
-# _date_ = 16/12/8 下午4:57
+# _project_: load_data_embding
+# _date_ = 16/12/11 下午7:31
 
-root = "/Users/hou/Documents/data/train/"
+root = "/Users/hou/Documents/data/embding/train/"
 # root = "/Users/hou/Documents/data/train2/"
 
 import os
@@ -12,7 +12,7 @@ import numpy as np
 
 
 def all_filename():
-    return os.listdir(r'/Users/hou/Documents/data/train')
+    return os.listdir(r'/Users/hou/Documents/data/embding/train/')
 
 
 def read(filename):
@@ -31,22 +31,22 @@ def read(filename):
         line = line[:-1]
 
         if (count % 6 == 0):
-            word.append(list(line))
+            word.append(line.split(','))
 
         if (count % 6 == 1):
-            event.append(list(line))
+            event.append(line.split(','))
 
         if (count % 6 == 2):
-            type.append(list(line))
+            type.append(line.split(','))
 
         if (count % 6 == 3):
-            polarity.append(list(line))
+            polarity.append(line.split(','))
 
         if (count % 6 == 4):
-            degree.append(list(line))
+            degree.append(line.split(','))
 
         if (count % 6 == 5):
-            modality.append(list(line))
+            modality.append(line.split(','))
 
         # print (line)
         count = count + 1
@@ -139,5 +139,7 @@ def get_batches(n=3):
 
 # work()
 
-# words, events, types, polarities, degrees, modalities = get_batches(1)
-# print(types.shape)
+# words, events, types, polarities, degrees, modalities = get_batches(3)
+# print(types)
+# print(words)
+# print(words.shape)

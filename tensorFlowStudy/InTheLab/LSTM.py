@@ -7,8 +7,9 @@
 # TODO 双向LSTM dropout
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-import load_data as load
-import numpy as np
+# import load_data as load
+import load_data_embding as load
+import datetime
 
 # set random seed for comparing the two result calculations
 tf.set_random_seed(1)
@@ -19,7 +20,7 @@ tf.set_random_seed(1)
 # hyperparameters
 lr = 0.001
 training_iters = 100000  # 循环次数
-batch_size = 1
+batch_size = 50
 
 # n_inputs = 28  # MNIST data input (img shape: 28*28) 每一行有28个元素
 # n_steps = 28  # time steps 一共是28行
@@ -27,7 +28,8 @@ n_hidden_units = 128  # neurons in hidden layer
 # n_classes = 10  # MNIST classes (0-9 digits)
 
 # 单词种类,pos 种类,ne 种类
-my_inputs = 20000 - 44 - 13 + 44 + 13
+# my_inputs = 20000 - 44 - 13 + 44 + 13
+my_inputs = 1 + 200 + 44 + 13
 
 max_steps = 5000
 
@@ -181,10 +183,10 @@ def RNN(X, weights, biases):
 event, type, polarity, degree, modality = RNN(x, weights, biases)
 
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(event, event_y)
-+ tf.nn.softmax_cross_entropy_with_logits(type, type_y)
-+ tf.nn.softmax_cross_entropy_with_logits(polarity, polarity_y)
-+ tf.nn.softmax_cross_entropy_with_logits(degree, degree_y)
-+ tf.nn.softmax_cross_entropy_with_logits(modality, modality_y))
+                      + tf.nn.softmax_cross_entropy_with_logits(type, type_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(polarity, polarity_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(degree, degree_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(modality, modality_y))
 
 train_op = tf.train.AdamOptimizer(lr).minimize(cost)
 
@@ -209,12 +211,20 @@ with tf.Session() as sess:
     # sess.run(tf.global_variables_initializer())
     sess.run(init)
     step = 0
+    time_style="%Y-%m-%d %H:%M:%S"
+
     while step * batch_size < training_iters:
         # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
         # batch_xs = batch_xs.reshape([batch_size, max_steps, my_inputs])
 
+        now = datetime.datetime.now()
+        print(step, "begin load data:", now.strftime(time_style))
+
         batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_batches(batch_size)
         batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
+
+        now = datetime.datetime.now()
+        print(step, "end load data:", now.strftime(time_style))
 
         sess.run([train_op], feed_dict={
             x: batch_xs,
@@ -224,7 +234,7 @@ with tf.Session() as sess:
             degree_y: batch_degree,
             modality_y: batch_modality
         })
-        if step % 1 == 0:
+        if step % 20 == 0:
             print(sess.run(cost, feed_dict={
                 x: batch_xs,
                 event_y: batch_event,
