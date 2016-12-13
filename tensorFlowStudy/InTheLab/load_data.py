@@ -3,8 +3,8 @@
 # _project_: load_data
 # _date_ = 16/12/8 下午4:57
 
-root = "/Users/hou/Documents/data/train/"
-# root = "/Users/hou/Documents/data/train2/"
+# root = "/Users/hou/Documents/data/train/"
+root = "/Users/hou/Documents/data/train2/"
 
 import os
 import random
@@ -12,7 +12,7 @@ import numpy as np
 
 
 def all_filename():
-    return os.listdir(r'/Users/hou/Documents/data/train')
+    return os.listdir(r'/Users/hou/Documents/data/train2/')
 
 
 def read(filename):
@@ -139,5 +139,6 @@ def get_batches(n=3):
 
 # work()
 
-# words, events, types, polarities, degrees, modalities = get_batches(1)
-# print(types.shape)
+words, events, types, polarities, degrees, modalities = get_batches(1)
+print(types.shape)
+print(words.shape)

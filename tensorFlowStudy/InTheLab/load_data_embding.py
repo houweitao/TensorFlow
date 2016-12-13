@@ -4,7 +4,8 @@
 # _date_ = 16/12/11 下午7:31
 
 root = "/Users/hou/Documents/data/embding/train/"
-# root = "/Users/hou/Documents/data/train2/"
+# root = "/Users/hou/Documents/data/embding/train2/"
+# root = "/Users/hou/Documents/data/embding/train5000/"
 
 import os
 import random
@@ -59,13 +60,6 @@ def read(filename):
     polarity = normalize_form(polarity)
     degree = normalize_form(degree)
     modality = normalize_form(modality)
-
-    # word = np.array(word)
-    # event = np.array(event)
-    # type = np.array(type)
-    # polarity = np.array(polarity)
-    # degree = np.array(degree)
-    # modality = np.array(modality)
 
     return word, event, type, polarity, degree, modality
 
@@ -139,7 +133,11 @@ def get_batches(n=3):
 
 # work()
 
-# words, events, types, polarities, degrees, modalities = get_batches(3)
-# print(types)
-# print(words)
+# words, events, types, polarities, degrees, modalities = get_batches(1)
+# print(events.shape)
+# print(types.shape)
+# print(polarities.shape)
+# print(degrees.shape)
+# print(modalities.shape)
+# # print(words)
 # print(words.shape)

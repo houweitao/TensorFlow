@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: LSTM
-# _date_ = 16/12/8 下午4:54
-
+# _project_: LSTM_count_accuracy
+# _date_ = 16/12/13 上午2:29
 
 # TODO 双向LSTM dropout
 import tensorflow as tf
@@ -10,6 +9,9 @@ from tensorflow.examples.tutorials.mnist import input_data
 # import load_data as load
 import load_data_embding as load
 import datetime
+import compare
+import numpy as  np
+import Word
 
 # set random seed for comparing the two result calculations
 tf.set_random_seed(1)
@@ -21,7 +23,7 @@ tf.set_random_seed(1)
 # lr = 0.001
 lr = 0.01
 training_iters = 100000  # 循环次数
-batch_size = 1
+batch_size = 280
 
 # n_inputs = 28  # MNIST data input (img shape: 28*28) 每一行有28个元素
 # n_steps = 28  # time steps 一共是28行
@@ -42,23 +44,9 @@ degree_class = 3 + 1
 modality_class = 4 + 1
 
 # tf Graph input
+keep_prob = tf.placeholder(tf.float32)
+
 x = tf.placeholder(tf.float32, [None, max_steps, my_inputs])  # changable
-
-# y = tf.placeholder(tf.float32, [None, n_classes])
-# step_len=tf.placeholder(tf.float32, [None, n_steps, my_inputs])
-
-
-# def makeX(step):
-# tf.placeholder(tf.float32, [None, step, my_inputs])
-
-
-# TODO
-# event_y = tf.placeholder(tf.float32, [None, event_class * max_steps])
-# type_y = tf.placeholder(tf.float32, [None, type_class * max_steps])
-# polarity_y = tf.placeholder(tf.float32, [None, polarity_class * max_steps])
-# degree_y = tf.placeholder(tf.float32, [None, degree_class * max_steps])
-# modality_y = tf.placeholder(tf.float32, [None, modality_class * max_steps])
-
 
 event_y = tf.placeholder(tf.float32, [None, max_steps, event_class])
 type_y = tf.placeholder(tf.float32, [None, max_steps, type_class])
@@ -109,7 +97,7 @@ saver = tf.train.Saver()
 
 
 # n:段落长度,词语的个数也就是 2016年12月07日20:12:09
-def RNN(X, weights, biases):
+def RNN(X, weights=weights, biases=biases):
     # hidden layer for input to cell
     ########################################
 
@@ -131,15 +119,6 @@ def RNN(X, weights, biases):
     # lstm cell is divided into two parts (c_state, h_state)
     init_state = lstm_cell.zero_state(batch_size, dtype=tf.float32)
 
-    # You have 2 options for following step.
-    # 1: tf.nn.rnn(cell, inputs);
-    # 2: tf.nn.dynamic_rnn(cell, inputs).
-    # If use option 1, you have to modified the shape of X_in, go and check out this:
-    # https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/recurrent_network.py
-    # In here, we go for option 2.
-    # dynamic_rnn receive Tensor (batch, steps, inputs) or (steps, batch, inputs) as X_in.
-    # Make sure the time_major is changed accordingly.
-
     # 每一步的 output 都在 outputs 里面. final_state是指(c_state, h_state) 2016年12月04日19:05:23
     outputs, final_state = tf.nn.dynamic_rnn(lstm_cell, X_in, initial_state=init_state, time_major=False)
 
@@ -156,60 +135,29 @@ def RNN(X, weights, biases):
     outputs = tf.unpack(tf.transpose(outputs, [0, 1, 2]))  # states is the last outputs. batch * step * hidden
     # results = tf.matmul(outputs[-1], weights['out']) + biases['out']
 
-    # outputs = tf.reshape(outputs, [-1, , n_hidden_units])
-    eventAll = [tf.matmul(i, weights['event']) + biases['event'] for i in outputs]  # TODO
-    typeAll = [tf.matmul(i, weights['type']) + biases['type'] for i in outputs]  # TODO
-    polarityAll = [tf.matmul(i, weights['polarity']) + biases['polarity'] for i in outputs]  # TODO
-    degreeAll = [tf.matmul(i, weights['degree']) + biases['degree'] for i in outputs]  # TODO
-    modalityAll = [tf.matmul(i, weights['modality']) + biases['modality'] for i in outputs]  # TODO
+    # print("ssssss")
+    # print(weights['event'])
 
-    # add softmax
-    # eventAll = tf.nn.softmax(eventAll)
-    # typeAll = tf.nn.softmax(typeAll)
-    # polarityAll = tf.nn.softmax(polarityAll)
-    # degreeAll = tf.nn.softmax(degreeAll)
-    # modalityAll = tf.nn.softmax(modalityAll)
+    # TODO 换个思路,从这里返回 outputs 呢?
 
-    # list->array
-    # eventAll = np.array(eventAll)
-    # typeAll = np.array(typeAll)
-    # polarityAll = np.array(polarityAll)
-    # degreeAll = np.array(degreeAll)
-    # modalityAll = np.array(modalityAll)
-
-    # print(eventAll)
-
-    # event = tf.matmul(outputs[-1], weights['event']) + biases['event']
-    # type = tf.matmul(outputs[-1], weights['type']) + biases['type']
-    # polarity = tf.matmul(outputs[-1], weights['polarity']) + biases['polarity']
-    # degree = tf.matmul(outputs[-1], weights['degree']) + biases['degree']
-    # modality = tf.matmul(outputs[-1], weights['modality']) + biases['modality']
-
-    return eventAll, typeAll, polarityAll, degreeAll, modalityAll
+    return outputs
 
 
-event, type, polarity, degree, modality = RNN(x, weights, biases)
+outputs = RNN(x, weights, biases)
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(event, event_y)
-                      + tf.nn.softmax_cross_entropy_with_logits(type, type_y)
-                      + tf.nn.softmax_cross_entropy_with_logits(polarity, polarity_y)
-                      + tf.nn.softmax_cross_entropy_with_logits(degree, degree_y)
-                      + tf.nn.softmax_cross_entropy_with_logits(modality, modality_y))
+eventAll = [tf.matmul(i, weights['event']) + biases['event'] for i in outputs]  # TODO
+typeAll = [tf.matmul(i, weights['type']) + biases['type'] for i in outputs]  # TODO
+polarityAll = [tf.matmul(i, weights['polarity']) + biases['polarity'] for i in outputs]  # TODO
+degreeAll = [tf.matmul(i, weights['degree']) + biases['degree'] for i in outputs]  # TODO
+modalityAll = [tf.matmul(i, weights['modality']) + biases['modality'] for i in outputs]  # TODO
+
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
+                      + tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
 
 train_op = tf.train.AdamOptimizer(lr).minimize(cost)
-
-correct_event = tf.equal(tf.argmax(event, 1), tf.argmax(event_y, 1))
-correct_type = tf.equal(tf.argmax(type, 1), tf.argmax(type_y, 1))
-correct_polarity = tf.equal(tf.argmax(polarity, 1), tf.argmax(polarity_y, 1))
-correct_degree = tf.equal(tf.argmax(degree, 1), tf.argmax(degree_y, 1))
-correct_modality = tf.equal(tf.argmax(modality, 1), tf.argmax(modality_y, 1))
-
-# TODO
-accuracy_event = tf.reduce_mean(tf.cast(correct_event, tf.float32))
-accuracy_type = tf.reduce_mean(tf.cast(correct_type, tf.float32))
-accuracy_polarity = tf.reduce_mean(tf.cast(correct_polarity, tf.float32))
-accuracy_degree = tf.reduce_mean(tf.cast(correct_degree, tf.float32))
-accuracy_modality = tf.reduce_mean(tf.cast(correct_modality, tf.float32))
 
 init = tf.initialize_all_variables()
 
@@ -220,19 +168,6 @@ with tf.Session() as sess:
     sess.run(init)
     step = 0
     time_style = "%Y-%m-%d %H:%M:%S"
-
-    # def compare(a,b):
-    #     count=0;
-    #     i=0
-    #     while i<batch_size:
-    #         aa=a[i]
-    #         bb=b[i]
-    #
-    #         j=0
-    #         while j<max_steps:
-    #             if(aa[j][0]==)
-    #
-    #     pass
 
     while step * batch_size < training_iters:
         # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
@@ -253,33 +188,83 @@ with tf.Session() as sess:
             type_y: batch_type,
             polarity_y: batch_polarity,
             degree_y: batch_degree,
-            modality_y: batch_modality
+            modality_y: batch_modality,
+            keep_prob: 0.8
         })
         if step % 1 == 0:
-            print(sess.run(cost, feed_dict={
-                x: batch_xs,
-                event_y: batch_event,
-                type_y: batch_type,
-                polarity_y: batch_polarity,
-                degree_y: batch_degree,
-                modality_y: batch_modality
-            }))
-
-            event_ret=(sess.run(event, feed_dict={
-                x: batch_xs,
-                event_y: batch_event,
-                type_y: batch_type,
-                polarity_y: batch_polarity,
-                degree_y: batch_degree,
-                modality_y: batch_modality
-            }))
-
-            # right
-            print(load.normalize_form(event_ret))
-
             # TODO 用一个对象把这些东西都包起来
-            # event, type, polarity, degree, modality=sess.run(RNN(batch_xs,weights,biases))
-            # print(load.normalize_form(event))
+            cost_ret = sess.run(cost, feed_dict={
+                x: batch_xs,
+                # weights:weights,
+                # biases:biases,
+                event_y: batch_event,
+                type_y: batch_type,
+                polarity_y: batch_polarity,
+                degree_y: batch_degree,
+                modality_y: batch_modality,
+                # keep_prob: 1
+            })
+            print("cost: ", cost_ret)
+
+            ret = sess.run(outputs, feed_dict={
+                x: batch_xs,
+                # keep_prob: 1
+            })
+            ret = load.normalize_form(ret)
+
+            # print(len(ret))
+            # print(ret[0])
+            # print("output!! ", ret.shape)
+            # print(ret.shape)
+
+            # print("---")
+
+            weights_change = sess.run(weights)
+            biases_change = sess.run(biases)
+
+            # weights=load.normalize_form(weights)
+            # biases=load.normalize_form(biases)
+
+            # print (weights_change['event'].shape)
+
+            eventAll = [np.dot(i, np.matrix(weights_change['event'])) + np.matrix(biases_change['event']) for i in
+                        ret]  # TODO
+            typeAll = [np.dot(i, np.matrix(weights_change['type'])) + np.matrix(biases_change['type']) for i in
+                       ret]  # TODO
+            polarityAll = [np.dot(i, np.matrix(weights_change['polarity'])) + np.matrix(biases_change['polarity']) for i
+                           in
+                           ret]  # TODO
+            degreeAll = [np.dot(i, np.matrix(weights_change['degree'])) + np.matrix(biases_change['degree']) for i in
+                         ret]  # TODO
+            modalityAll = [np.dot(i, np.matrix(weights_change['modality'])) + np.matrix(biases_change['modality']) for i
+                           in
+                           ret]  # TODO
+
+            # eventAll = [tf.matmul(i, weights['event']) + biases['event'] for i in outputs]  # TODO
+            # typeAll = [tf.matmul(i, weights['type']) + biases['type'] for i in ret]  # TODO
+            # polarityAll = [tf.matmul(i, weights['polarity']) + biases['polarity'] for i in ret]  # TODO
+            # degreeAll = [tf.matmul(i, weights['degree']) + biases['degree'] for i in ret]  # TODO
+            # modalityAll = [tf.matmul(i, weights['modality']) + biases['modality'] for i in ret]  # TODO
+
+            # eventAll = tf.unpack(tf.transpose(eventAll, [0, 1, 2]))
+            # typeAll = tf.unpack(tf.transpose(typeAll, [0, 1, 2]))
+            # polarityAll = tf.unpack(tf.transpose(polarityAll, [0, 1, 2]))
+            # degreeAll = tf.unpack(tf.transpose(degreeAll, [0, 1, 2]))
+            # modalityAll = tf.unpack(tf.transpose(modalityAll, [0, 1, 2]))
+
+            eventAll = load.normalize_form(eventAll)
+            typeAll = load.normalize_form(typeAll)
+            polarityAll = load.normalize_form(polarityAll)
+            degreeAll = load.normalize_form(degreeAll)
+            modalityAll = load.normalize_form(modalityAll)
+
+            # print(eventAll.shape)
+            # print(batch_event.shape)
+
+            print(
+                compare.compare_all(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
+                                    batch_degree,
+                                    modalityAll, batch_modality))
 
         # if step % 1 == 0:
         #     ev = sess.run(event, feed_dict={
