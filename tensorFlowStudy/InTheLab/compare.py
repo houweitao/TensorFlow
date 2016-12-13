@@ -5,7 +5,6 @@
 
 from __future__ import division
 
-
 def compare_all(event_prediction, event_real, type_prediction, type_real, polarity_prediction, polarity_real,
                 degree_prediction, degree_real, modality_prediction, modality_real):
     # batch size
