@@ -43,9 +43,6 @@ polarity_class = 2 + 1  # TODO
 degree_class = 3 + 1
 modality_class = 4 + 1
 
-# tf Graph input
-keep_prob = tf.placeholder(tf.float32)
-
 x = tf.placeholder(tf.float32, [None, max_steps, my_inputs])  # changable
 
 event_y = tf.placeholder(tf.float32, [None, max_steps, event_class])
@@ -82,8 +79,6 @@ biases = {
     'modality': tf.Variable(tf.constant(0.1, shape=[modality_class, ])),
 }
 
-saver = tf.train.Saver()
-
 
 # def weights_biases_maker(input, output):
 #     weight = tf.Variable(tf.random_normal([input, output]))
@@ -97,7 +92,7 @@ saver = tf.train.Saver()
 
 
 # n:段落长度,词语的个数也就是 2016年12月07日20:12:09
-def RNN(X, weights=weights, biases=biases):
+def RNN(X):
     # hidden layer for input to cell
     ########################################
 
@@ -135,15 +130,12 @@ def RNN(X, weights=weights, biases=biases):
     outputs = tf.unpack(tf.transpose(outputs, [0, 1, 2]))  # states is the last outputs. batch * step * hidden
     # results = tf.matmul(outputs[-1], weights['out']) + biases['out']
 
-    # print("ssssss")
     # print(weights['event'])
-
-    # TODO 换个思路,从这里返回 outputs 呢?
 
     return outputs
 
 
-outputs = RNN(x, weights, biases)
+outputs = RNN(x)
 
 eventAll = [tf.matmul(i, weights['event']) + biases['event'] for i in outputs]  # TODO
 typeAll = [tf.matmul(i, weights['type']) + biases['type'] for i in outputs]  # TODO
@@ -160,6 +152,8 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
 train_op = tf.train.AdamOptimizer(lr).minimize(cost)
 
 init = tf.initialize_all_variables()
+
+saver = tf.train.Saver()
 
 with tf.Session() as sess:
     # tf.initialize_all_variables() no long valid from
@@ -189,9 +183,9 @@ with tf.Session() as sess:
             polarity_y: batch_polarity,
             degree_y: batch_degree,
             modality_y: batch_modality,
-            keep_prob: 0.8
+            # keep_prob: 0.8
         })
-        if step % 1 == 0:
+        if step % 2 == 0:
             # TODO 用一个对象把这些东西都包起来
             cost_ret = sess.run(cost, feed_dict={
                 x: batch_xs,
@@ -262,9 +256,9 @@ with tf.Session() as sess:
             # print(batch_event.shape)
 
             print(
-                compare.compare_all(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
-                                    batch_degree,
-                                    modalityAll, batch_modality))
+                compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
+                                     batch_degree,
+                                     modalityAll, batch_modality))
 
         # if step % 1 == 0:
         #     ev = sess.run(event, feed_dict={
@@ -288,8 +282,11 @@ with tf.Session() as sess:
         # show_output()
         step += 1
 
-        path = "save_path/LSTM_" + str(step) + ".ckpt"
-        saver.save(sess, path)
+        # path = "save_path/LSTM_" + str(step) + ".ckpt"
+        # saver.save(sess, path)
+        if step == 10:
+            break
 
+        # print(sess.run(weights))
     save_path = saver.save(sess, "save_path/LSTM.ckpt")
     print ('Save to path', save_path)

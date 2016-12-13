@@ -3,7 +3,9 @@
 # _project_: load_data_embding
 # _date_ = 16/12/11 下午7:31
 
-root = "/Users/hou/Documents/data/embding/train/"
+train = "/Users/hou/Documents/data/embding/train/"
+test = "/Users/hou/Documents/data/embding/test/"
+dev = "/Users/hou/Documents/data/embding/dev/"
 # root = "/Users/hou/Documents/data/embding/train2/"
 # root = "/Users/hou/Documents/data/embding/train5000/"
 
@@ -12,11 +14,19 @@ import random
 import numpy as np
 
 
-def all_filename():
+def all_train_filename():
     return os.listdir(r'/Users/hou/Documents/data/embding/train/')
 
 
-def read(filename):
+def all_test_filename():
+    return os.listdir(r'/Users/hou/Documents/data/embding/test/')
+
+
+def all_dev_filename():
+    return os.listdir(r'/Users/hou/Documents/data/embding/dev/')
+
+
+def read(filename, root):
     f = open(root + filename, "r")
     lines = f.readlines()  # 读取全部内容
 
@@ -70,8 +80,8 @@ def normalize_form(list):
     return list
 
 
-def get_random_filename(n):
-    file_list = all_filename()
+def get_random_train_filename(n):
+    file_list = all_train_filename()
 
     list = []
     for file in file_list:
@@ -88,18 +98,53 @@ def get_random_filename(n):
     return ret
 
 
-def get_batches(n=3):
+def get_random_dev_filename(n):
+    file_list = all_dev_filename()
+
+    list = []
+    for file in file_list:
+        list.append(file)
+
+    random.shuffle(list)
+    ret = []
+    pos = 0
+    while len(ret) < n:
+        ret.append(list[pos])
+        pos += 1
+    # ret = normalize_form(ret)
+    print(ret)
+    return ret
+
+
+def get_random_test_filename(n):
+    file_list = all_test_filename()
+
+    list = []
+    for file in file_list:
+        list.append(file)
+
+    random.shuffle(list)
+    ret = []
+    pos = 0
+    while len(ret) < n:
+        ret.append(list[pos])
+        pos += 1
+    # ret = normalize_form(ret)
+    print(ret)
+    return ret
+
+
+def get_train_batches(n=3):
     words = []
     events = []
     types = []
     polarities = []
     degrees = []
     modalities = []
-
-    files = get_random_filename(n)
+    files = get_random_train_filename(n)
 
     for file in files:
-        word, event, type, polarity, degree, modality = read(file)
+        word, event, type, polarity, degree, modality = read(file, train)
         words.append(word)
         events.append(event)
         types.append(type)
@@ -107,15 +152,70 @@ def get_batches(n=3):
         degrees.append(degree)
         modalities.append(modality)
 
-    words=normalize_form(words)
-    events=normalize_form(events)
-    types=normalize_form(types)
-    polarities=normalize_form(polarities)
-    degrees=normalize_form(degrees)
-    modalities=normalize_form(modalities)
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
 
     return words, events, types, polarities, degrees, modalities
 
+
+def get_test_batches(n=3):
+    words = []
+    events = []
+    types = []
+    polarities = []
+    degrees = []
+    modalities = []
+    files = get_random_test_filename(n)
+
+    for file in files:
+        word, event, type, polarity, degree, modality = read(file, test)
+        words.append(word)
+        events.append(event)
+        types.append(type)
+        polarities.append(polarity)
+        degrees.append(degree)
+        modalities.append(modality)
+
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
+
+    return words, events, types, polarities, degrees, modalities
+
+
+def get_dev_batches(n=3):
+    words = []
+    events = []
+    types = []
+    polarities = []
+    degrees = []
+    modalities = []
+    files = get_random_dev_filename(n)
+
+    for file in files:
+        word, event, type, polarity, degree, modality = read(file, dev)
+        words.append(word)
+        events.append(event)
+        types.append(type)
+        polarities.append(polarity)
+        degrees.append(degree)
+        modalities.append(modality)
+
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
+
+    return words, events, types, polarities, degrees, modalities
 
 # def work():
 #     for filename in get_random_filename(10):
@@ -133,7 +233,7 @@ def get_batches(n=3):
 
 # work()
 
-# words, events, types, polarities, degrees, modalities = get_batches(1)
+# words, events, types, polarities, degrees, modalities = get_batches(3)
 # print(events.shape)
 # print(types.shape)
 # print(polarities.shape)

@@ -5,8 +5,9 @@
 
 from __future__ import division
 
-def compare_all(event_prediction, event_real, type_prediction, type_real, polarity_prediction, polarity_real,
-                degree_prediction, degree_real, modality_prediction, modality_real):
+
+def compare_five(event_prediction, event_real, type_prediction, type_real, polarity_prediction, polarity_real,
+                 degree_prediction, degree_real, modality_prediction, modality_real):
     # batch size
     batch_size = len(event_prediction)
 
@@ -60,8 +61,9 @@ def compare_all(event_prediction, event_real, type_prediction, type_real, polari
             i += 1
         batch_index += 1
 
+    return same_event / all, same_type / all, same_polarity / all, same_degree / all, same_modality / all
 
-    return same_event / all, same_type / all, same_polarity / all, same_degree / all, same_modality / all  # def compare_event(prediction, real):
+    # def compare_event(prediction, real):
 
 
 #     len = len(prediction)

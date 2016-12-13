@@ -14,13 +14,13 @@ import numpy as  np
 import Word
 
 # set random seed for comparing the two result calculations
-tf.set_random_seed(1)
+# tf.set_random_seed(1)
 
 # this is data
 # mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 # hyperparameters
-batch_size = 280
+batch_size = 140
 
 # n_inputs = 28  # MNIST data input (img shape: 28*28) 每一行有28个元素
 # n_steps = 28  # time steps 一共是28行
@@ -77,56 +77,23 @@ biases = {
     'modality': tf.Variable(tf.constant(0.1, shape=[modality_class, ])),
 }
 
-saver = tf.train.Saver()
-
 # n:段落长度,词语的个数也就是 2016年12月07日20:12:09
-def RNN(X, weights=weights, biases=biases):
-    # hidden layer for input to cell
-    ########################################
-
-    # transpose the inputs shape from
-    # X ==> (128 batch * 28 steps, 28 inputs)
+def RNN(X):
     X = tf.reshape(X, [-1, my_inputs])
 
-    # into hidden
-    # X_in = (128 batch * 28 steps, 128 hidden)
     X_in = tf.matmul(X, weights['in']) + biases['in']
-    # X_in ==> (128 batch, 28 steps, 128 hidden)
     X_in = tf.reshape(X_in, [-1, max_steps, n_hidden_units])
 
-    # cell
-    ##########################################
-
-    # basic LSTM Cell.
     lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(n_hidden_units, forget_bias=1.0, state_is_tuple=True)
-    # lstm cell is divided into two parts (c_state, h_state)
     init_state = lstm_cell.zero_state(batch_size, dtype=tf.float32)
 
-    # 每一步的 output 都在 outputs 里面. final_state是指(c_state, h_state) 2016年12月04日19:05:23
     outputs, final_state = tf.nn.dynamic_rnn(lstm_cell, X_in, initial_state=init_state, time_major=False)
 
-    # hidden layer for output as the final results
-    #############################################
-    # results = tf.matmul(final_state[1], weights['out']) + biases['out']
-
-    # # or
-    # unpack to list [(batch, outputs)..] * steps
-    # 不转可能更好些.一个batch一个batch比较 2016年12月08日12:10:48
-
-    # TODO
-    # outputs = tf.unpack(tf.transpose(outputs, [1, 0, 2]))  # states is the last outputs. step * batch * hidden
     outputs = tf.unpack(tf.transpose(outputs, [0, 1, 2]))  # states is the last outputs. batch * step * hidden
-    # results = tf.matmul(outputs[-1], weights['out']) + biases['out']
-
-    # print("ssssss")
-    # print(weights['event'])
-
-    # TODO 换个思路,从这里返回 outputs 呢?
-
     return outputs
 
 
-outputs = RNN(x, weights, biases)
+outputs = RNN(x)
 
 eventAll = [tf.matmul(i, weights['event']) + biases['event'] for i in outputs]  # TODO
 typeAll = [tf.matmul(i, weights['type']) + biases['type'] for i in outputs]  # TODO
@@ -143,28 +110,16 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
 # train_op = tf.train.AdamOptimizer(lr).minimize(cost)
 
 saver = tf.train.Saver()
-# init = tf.initialize_all_variables()
-
 with tf.Session() as sess:
-    # tf.initialize_all_variables() no long valid from
-    # 2017-03-02 if using tensorflow >= 0.12
-    # sess.run(tf.global_variables_initializer())
-    saver.restore(sess, "save_path/first_save.ckpt")
+    saver.restore(sess, "save_path/LSTM.ckpt")
     # sess.run(init)
     time_style = "%Y-%m-%d %H:%M:%S"
 
-    batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_batches(batch_size)
+    batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_batches(batch_size)
     batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 
     ret = sess.run(outputs, feed_dict={
         x: batch_xs,
-        # weights:weights,
-        # biases:biases
-        # event_y: batch_event,
-        # type_y: batch_type,
-        # polarity_y: batch_polarity,
-        # degree_y: batch_degree,
-        # modality_y: batch_modality
     })
     ret = load.normalize_form(ret)
 
@@ -191,6 +146,6 @@ with tf.Session() as sess:
     modalityAll = load.normalize_form(modalityAll)
 
     print(
-        compare.compare_all(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
+        compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
                             batch_degree,
                             modalityAll, batch_modality))
