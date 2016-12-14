@@ -11,7 +11,9 @@ import load_data_embding as load
 import datetime
 import compare
 import numpy as  np
-import Word
+import os
+
+# import Word
 
 # set random seed for comparing the two result calculations
 tf.set_random_seed(1)
@@ -170,7 +172,8 @@ with tf.Session() as sess:
         now = datetime.datetime.now()
         print(step, "begin load data:", now.strftime(time_style))
 
-        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_batches(batch_size)
+        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_train_batches(
+            batch_size)
         batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 
         now = datetime.datetime.now()
@@ -185,7 +188,7 @@ with tf.Session() as sess:
             modality_y: batch_modality,
             # keep_prob: 0.8
         })
-        if step % 2 == 0:
+        if step % 1 == 0:
             # TODO 用一个对象把这些东西都包起来
             cost_ret = sess.run(cost, feed_dict={
                 x: batch_xs,
@@ -255,37 +258,30 @@ with tf.Session() as sess:
             # print(eventAll.shape)
             # print(batch_event.shape)
 
-            print(
-                compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
-                                     batch_degree,
-                                     modalityAll, batch_modality))
+            e, t, p, d, m = compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll,
+                                                 batch_polarity, degreeAll,
+                                                 batch_degree,
+                                                 modalityAll, batch_modality)
+            print(e, t, p, d, m)
 
-        # if step % 1 == 0:
-        #     ev = sess.run(event, feed_dict={
-        #         x: batch_xs,
-        #         event_y: batch_event,
-        #         type_y: batch_type,
-        #         polarity_y: batch_polarity,
-        #         degree_y: batch_degree,
-        #         modality_y: batch_modality
-        #     })
-        #
-        #     print(ev.shape)
-        #     print(ev[0].shape)
-        #     print(ev[0][0].shape)
-        #
-        #     print(len(ev))
-        #     print(len(ev[0]))
-        #     print(len(ev[0][0]))
-        #     print(ev)
+            f = open('save_path/record.txt', 'a')
+            f.write('step ' + str(step) + '\n')
+            f.write('cost ' + str(cost_ret))
+            f.write('\n')
+            line = str(e) + ';' + str(t) + ';' + str(p) + ';' + str(d) + ';' + str(m)
+            f.write('precision ' + line)
+            f.write('\n')
+            f.write('\n')
+            f.close()
 
-        # show_output()
+            dir = "save_path/" + str(step)
+            os.mkdir(dir)
+            path = "save_path/" + str(step) + "/LSTM.ckpt"
+            saver.save(sess, path)
+
         step += 1
-
-        # path = "save_path/LSTM_" + str(step) + ".ckpt"
-        # saver.save(sess, path)
-        if step == 10:
-            break
+        # if step == 30:
+        #     break
 
         # print(sess.run(weights))
     save_path = saver.save(sess, "save_path/LSTM.ckpt")
