@@ -4,10 +4,12 @@
 # _date_ = 16/12/11 下午7:31
 
 train = "/Users/hou/Documents/data/embding/train/"
+# train = "/Users/hou/Documents/data/embding/all/"
+# train = "/Users/hou/Documents/data/embding/train2/"
+# root = "/Users/hou/Documents/data/embding/train5000/"
+
 test = "/Users/hou/Documents/data/embding/test/"
 dev = "/Users/hou/Documents/data/embding/dev/"
-# root = "/Users/hou/Documents/data/embding/train2/"
-# root = "/Users/hou/Documents/data/embding/train5000/"
 
 import os
 import random
@@ -43,6 +45,54 @@ def read(filename, root):
 
         if (count % 6 == 0):
             word.append(line.split(','))
+
+        if (count % 6 == 1):
+            event.append(line.split(','))
+
+        if (count % 6 == 2):
+            type.append(line.split(','))
+
+        if (count % 6 == 3):
+            polarity.append(line.split(','))
+
+        if (count % 6 == 4):
+            degree.append(line.split(','))
+
+        if (count % 6 == 5):
+            modality.append(line.split(','))
+
+        # print (line)
+        count = count + 1
+        # if (count == 10):
+        #     break
+
+    word = normalize_form(word)
+    event = normalize_form(event)
+    type = normalize_form(type)
+    polarity = normalize_form(polarity)
+    degree = normalize_form(degree)
+    modality = normalize_form(modality)
+
+    return word, event, type, polarity, degree, modality
+
+
+def read_embedding_only(filename, root):
+    f = open(root + filename, "r")
+    lines = f.readlines()  # 读取全部内容
+
+    word = []
+    event = []
+    type = []
+    polarity = []
+    degree = []
+    modality = []
+
+    count = 0
+    for line in lines:
+        line = line[:-1]
+
+        if (count % 6 == 0):
+            word.append(line.split(',')[:201])
 
         if (count % 6 == 1):
             event.append(line.split(','))
@@ -201,6 +251,90 @@ def get_dev_batches(n=3):
 
     for file in files:
         word, event, type, polarity, degree, modality = read(file, dev)
+        words.append(word)
+        events.append(event)
+        types.append(type)
+        polarities.append(polarity)
+        degrees.append(degree)
+        modalities.append(modality)
+
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
+
+    return words, events, types, polarities, degrees, modalities
+
+
+def get_train_embedding_batches(n=3):
+    words = []
+    events = []
+    types = []
+    polarities = []
+    degrees = []
+    modalities = []
+    files = get_random_train_filename(n)
+
+    for file in files:
+        word, event, type, polarity, degree, modality = read_embedding_only(file, train)
+        words.append(word)
+        events.append(event)
+        types.append(type)
+        polarities.append(polarity)
+        degrees.append(degree)
+        modalities.append(modality)
+
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
+
+    return words, events, types, polarities, degrees, modalities
+
+
+def get_test_embedding_batches(n=3):
+    words = []
+    events = []
+    types = []
+    polarities = []
+    degrees = []
+    modalities = []
+    files = get_random_test_filename(n)
+
+    for file in files:
+        word, event, type, polarity, degree, modality = read_embedding_only(file, test)
+        words.append(word)
+        events.append(event)
+        types.append(type)
+        polarities.append(polarity)
+        degrees.append(degree)
+        modalities.append(modality)
+
+    words = normalize_form(words)
+    events = normalize_form(events)
+    types = normalize_form(types)
+    polarities = normalize_form(polarities)
+    degrees = normalize_form(degrees)
+    modalities = normalize_form(modalities)
+
+    return words, events, types, polarities, degrees, modalities
+
+
+def get_dev_embedding_batches(n=3):
+    words = []
+    events = []
+    types = []
+    polarities = []
+    degrees = []
+    modalities = []
+    files = get_random_dev_filename(n)
+
+    for file in files:
+        word, event, type, polarity, degree, modality = read_embedding_only(file, dev)
         words.append(word)
         events.append(event)
         types.append(type)

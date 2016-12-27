@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: LSTM_count_accuracy
-# _date_ = 16/12/13 上午2:29
+# _project_: LSTM_count_accuracy_embedding
+# _date_ = 16/12/27 下午9:34
+
 
 # TODO 双向LSTM dropout
 import tensorflow as tf
@@ -37,8 +38,7 @@ n_hidden_units = 128  # neurons in hidden layer
 
 # 单词种类,pos 种类,ne 种类
 # my_inputs = 20000 - 44 - 13 + 44 + 13
-my_inputs = 1 + 200 + 44 + 1 + 13 + 1
-# my_inputs = 1 + 200 + 44 + 1 + 13 + 1
+my_inputs = 1 + 200
 
 max_steps = 2000
 
@@ -152,12 +152,19 @@ polarityAll = [tf.matmul(i, weights['polarity']) + biases['polarity'] for i in o
 degreeAll = [tf.matmul(i, weights['degree']) + biases['degree'] for i in outputs]  # TODO
 modalityAll = [tf.matmul(i, weights['modality']) + biases['modality'] for i in outputs]  # TODO
 
+# cost = tf.reduce_mean(
+#     event_class * tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
+#     + type_class * tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
+#     + polarity_class * tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
+#     + degree_class * tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
+#     + modality_class * tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
+
 cost = tf.reduce_mean(
-    event_class * tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
-    + type_class * tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
-    + polarity_class * tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
-    + degree_class * tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
-    + modality_class * tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
+    tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
+    + tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
+    + tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
+    + tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
+    + tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
 
 
 def show_cost(cost):
@@ -180,7 +187,7 @@ with tf.Session() as sess:
     step = 0
     time_style = "%Y-%m-%d %H:%M:%S"
 
-    batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_train_batches(
+    batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_train_embedding_batches(
         batch_size)
     batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 

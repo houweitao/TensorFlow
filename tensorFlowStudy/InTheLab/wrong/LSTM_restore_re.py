@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: LSTM_resotre
-# _date_ = 16/12/13 下午2:56
+# _project_: LSTM_restore_re
+# _date_ = 16/12/26 下午4:54
+
 
 # TODO 双向LSTM dropout
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 # import load_data as load
-import load_data_embding as load
+import tensorFlowStudy.InTheLab.load_data_embding as load
 import datetime
-import compare
+import tensorFlowStudy.InTheLab.compare
 import numpy as  np
-import Word
+import tensorFlowStudy.InTheLab.Word
 
 # set random seed for comparing the two result calculations
 # tf.set_random_seed(1)
@@ -108,15 +109,13 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
                       + tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
                       + tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
 
+
 # train_op = tf.train.AdamOptimizer(lr).minimize(cost)
 
-saver = tf.train.Saver()
-
-
-def run_once(ckpt_path):
+def restore(path):
+    saver = tf.train.Saver()
     with tf.Session() as sess:
-        # saver.restore(sess, "save_path/10.bak/LSTM.ckpt")
-        saver.restore(sess, ckpt_path)
+        saver.restore(sess, path)
         # sess.run(init)
         time_style = "%Y-%m-%d %H:%M:%S"
 
@@ -152,71 +151,8 @@ def run_once(ckpt_path):
         modalityAll = load.normalize_form(modalityAll)
 
         print(
-            compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
-                                 batch_degree,
-                                 modalityAll, batch_modality))
+            tensorFlowStudy.InTheLab.compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll, batch_polarity, degreeAll,
+                                                          batch_degree,
+                                                          modalityAll, batch_modality))
 
-
-def run_re(low, high):
-    with tf.Session() as sess:
-        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_batches(
-            batch_size)
-        batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
-
-        count = low
-        pre = "save_path/"
-        after = "/LSTM.ckpt"
-        while count <= high:
-            cur_path = pre + str(count) + after
-
-            saver.restore(sess, cur_path)
-            # sess.run(init)
-            time_style = "%Y-%m-%d %H:%M:%S"
-
-            ret = sess.run(outputs, feed_dict={
-                x: batch_xs,
-            })
-            ret = load.normalize_form(ret)
-
-            weights_change = sess.run(weights)
-            biases_change = sess.run(biases)
-
-            eventAll = [np.dot(i, np.matrix(weights_change['event'])) + np.matrix(biases_change['event']) for i in
-                        ret]
-            typeAll = [np.dot(i, np.matrix(weights_change['type'])) + np.matrix(biases_change['type']) for i in
-                       ret]
-            polarityAll = [np.dot(i, np.matrix(weights_change['polarity'])) + np.matrix(biases_change['polarity']) for i
-                           in
-                           ret]
-            degreeAll = [np.dot(i, np.matrix(weights_change['degree'])) + np.matrix(biases_change['degree']) for i in
-                         ret]
-            modalityAll = [np.dot(i, np.matrix(weights_change['modality'])) + np.matrix(biases_change['modality']) for i
-                           in
-                           ret]
-
-            eventAll = load.normalize_form(eventAll)
-            typeAll = load.normalize_form(typeAll)
-            polarityAll = load.normalize_form(polarityAll)
-            degreeAll = load.normalize_form(degreeAll)
-            modalityAll = load.normalize_form(modalityAll)
-
-            e, t, p, d, m = compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll,
-                                                 batch_polarity, degreeAll,
-                                                 batch_degree,
-                                                 modalityAll, batch_modality)
-
-            print(count, e, t, p, d, m)
-
-            f = open('save_path/restore.txt', 'a')
-            f.write('step ' + str(count) + '\n')
-            line = str(e) + ';' + str(t) + ';' + str(p) + ';' + str(d) + ';' + str(m)
-            f.write('precision ' + line)
-            f.write('\n')
-            f.write('\n')
-            f.close()
-
-            count += 1
-
-
-run_re(71, 90)
-# run_once("save_path/10.bak/LSTM.ckpt")
+# restore("save_path/10.bak/LSTM.ckpt")
