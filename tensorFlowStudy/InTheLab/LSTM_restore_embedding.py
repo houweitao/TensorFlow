@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: LSTM_resotre
-# _date_ = 16/12/13 下午2:56
+# _project_: LSTM_restore_embedding
+# _date_ = 16/12/28 上午11:04
 
 # TODO 双向LSTM dropout
 import tensorflow as tf
@@ -29,7 +29,7 @@ n_hidden_units = 128  # neurons in hidden layer
 
 # 单词种类,pos 种类,ne 种类
 # my_inputs = 20000 - 44 - 13 + 44 + 13
-my_inputs = 1 + 200 + 44 + 1 + 13 + 1
+my_inputs = 1 + 200
 
 max_steps = 2000
 
@@ -120,7 +120,7 @@ def run_once(ckpt_path):
         # sess.run(init)
         time_style = "%Y-%m-%d %H:%M:%S"
 
-        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_batches(
+        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_embedding_batches(
             batch_size)
         batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 
@@ -159,7 +159,7 @@ def run_once(ckpt_path):
 
 def run_re(low, high):
     with tf.Session() as sess:
-        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_batches(
+        batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_test_embedding_batches(
             batch_size)
         batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 
@@ -200,10 +200,10 @@ def run_re(low, high):
             degreeAll = load.normalize_form(degreeAll)
             modalityAll = load.normalize_form(modalityAll)
 
-            e, t, p, d, m = compare.compare_five_p_and_r(eventAll, batch_event, typeAll, batch_type, polarityAll,
-                                                         batch_polarity, degreeAll,
-                                                         batch_degree,
-                                                         modalityAll, batch_modality)
+            e, t, p, d, m = compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll,
+                                                 batch_polarity, degreeAll,
+                                                 batch_degree,
+                                                 modalityAll, batch_modality)
 
             print(count, e, t, p, d, m)
 
@@ -218,7 +218,5 @@ def run_re(low, high):
             count += 1
 
 
-# run_re(72, 357)
-# run_re(989, 990)
-run_re(250, 251)
+run_re(101, 140)
 # run_once("save_path/10.bak/LSTM.ckpt")

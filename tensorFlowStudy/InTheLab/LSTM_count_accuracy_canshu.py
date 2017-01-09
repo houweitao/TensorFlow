@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # _author_ = 'hou'
-# _project_: LSTM_count_accuracy
-# _date_ = 16/12/13 上午2:29
+# _project_: LSTM_count_accuracy_canshu
+# _date_ = 16/12/29 下午4:07
 
 # TODO 双向LSTM dropout
 import tensorflow as tf
@@ -24,8 +24,9 @@ tf.set_random_seed(1)
 
 # hyperparameters
 # lr = 0.001
+possibility_base = 0.1
 lr = 0.02
-training_iters = 1000000  # 循环次数
+training_iters = 100000  # 循环次数
 # batch_size = 280
 batch_size = 280
 # batch_test_size = 140
@@ -42,7 +43,7 @@ my_inputs = 1 + 200 + 44 + 1 + 13 + 1
 
 max_steps = 2000
 
-save_tmp = "save_path/@tmp/"
+save_tmp = "save_path/tmp/"
 save_path = "save_path/"
 
 # 如果不是 event,则其他四种没有资格去 judge
@@ -59,6 +60,22 @@ type_y = tf.placeholder(tf.float32, [None, max_steps, type_class])
 polarity_y = tf.placeholder(tf.float32, [None, max_steps, polarity_class])
 degree_y = tf.placeholder(tf.float32, [None, max_steps, degree_class])
 modality_y = tf.placeholder(tf.float32, [None, max_steps, modality_class])
+
+# Weights_event = tf.Variable(tf.random_uniform([1], 0.2, 0.2))
+# Weights_type = tf.Variable(tf.random_uniform([1], 0.2, 0.2))
+# Weights_polarity = tf.Variable(tf.random_uniform([1], 0.2, 0.2))
+# Weights_degree = tf.Variable(tf.random_uniform([1], 0.2, 0.2))
+# Weights_modality = tf.Variable(tf.random_uniform([1], 0.2, 0.2))
+
+Weights_event = 0.2 + possibility_base
+Weights_type = 0.2 + possibility_base
+Weights_polarity = 0.2 + possibility_base
+Weights_degree = 0.2 + + possibility_base
+Weights_modality = 0.2 + possibility_base
+
+# Weights_modality = tf.Variable(
+#     tf.random_uniform([1], 5.0, 5.0)) - Weights_event - Weights_type - Weights_polarity - Weights_degree;
+# biases = tf.Variable(tf.zeros([1]))
 
 # Define weights
 weights = {
@@ -153,15 +170,15 @@ degreeAll = [tf.matmul(i, weights['degree']) + biases['degree'] for i in outputs
 modalityAll = [tf.matmul(i, weights['modality']) + biases['modality'] for i in outputs]  # TODO
 
 cost = tf.reduce_mean(
-    (event_class - 1) * tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
-    + (type_class + 1) * tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
-    + (polarity_class + 1) * tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
-    + (degree_class - 1) * tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
-    + (modality_class + 2) * tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
+    Weights_event * tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
+    + Weights_type * tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
+    + Weights_polarity * tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
+    + Weights_degree * tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
+    + Weights_modality * tf.nn.softmax_cross_entropy_with_logits(modalityAll, modality_y))
 
 
 # cost = tf.reduce_mean(
-#     8 * tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
+#     tf.nn.softmax_cross_entropy_with_logits(eventAll, event_y)
 #     + tf.nn.softmax_cross_entropy_with_logits(typeAll, type_y)
 #     + tf.nn.softmax_cross_entropy_with_logits(polarityAll, polarity_y)
 #     + tf.nn.softmax_cross_entropy_with_logits(degreeAll, degree_y)
@@ -185,24 +202,14 @@ with tf.Session() as sess:
     # 2017-03-02 if using tensorflow >= 0.12
     # sess.run(tf.global_variables_initializer())
     sess.run(init)
-
-    count = 0
-    # count = 357
-    # count = 714
-    # pre = "save_path/"
-    # after = "/LSTM.ckpt"
-    # cur_path = pre + str(count) + after
-    # saver.restore(sess, cur_path)
-
-    step = count
-    # step = 0
+    step = 0
     time_style = "%Y-%m-%d %H:%M:%S"
 
     batch_word, batch_event, batch_type, batch_polarity, batch_degree, batch_modality = load.get_train_batches(
         batch_size)
     batch_xs = batch_word.reshape([batch_size, max_steps, my_inputs])
 
-    while (step - count) * batch_size < training_iters:
+    while step * batch_size < training_iters:
         # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
         # batch_xs = batch_xs.reshape([batch_size, max_steps, my_inputs])
 
@@ -233,6 +240,8 @@ with tf.Session() as sess:
                 # keep_prob: 1
             })
             print("cost: ", cost_ret)
+            print(
+                step, "Weights ", Weights_event, Weights_type, Weights_polarity, Weights_degree, Weights_modality)
 
         if step % 1 == 0:
             # TODO 用一个对象把这些东西都包起来
@@ -280,45 +289,53 @@ with tf.Session() as sess:
             # print(eventAll.shape)
             # print(batch_event.shape)
 
-            e, t, p, d, m = compare.compare_five_p_and_r(eventAll, batch_event, typeAll, batch_type, polarityAll,
-                                                         batch_polarity, degreeAll,
-                                                         batch_degree,
-                                                         modalityAll, batch_modality)
+            e, t, p, d, m = compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll,
+                                                 batch_polarity, degreeAll,
+                                                 batch_degree,
+                                                 modalityAll, batch_modality)
 
-            # e, t, p, d, m = compare.compare_five(eventAll, batch_event, typeAll, batch_type, polarityAll,
-            #                                  batch_polarity, degreeAll,
-            #                                  batch_degree,
-            #                                  modalityAll, batch_modality)
+            all = 5 - e - t - p - d - m
+            ee = (1 - e) / all
+            tt = (1 - t) / all
+            pp = (1 - p) / all
+            dd = (1 - d) / all
+            mm = (1 - m) / all
 
-        print(e, t, p, d, m)
+            Weights_event = ee + possibility_base
+            Weights_type = tt + possibility_base
+            Weights_polarity = pp + possibility_base
+            Weights_degree = dd + possibility_base
+            Weights_modality = mm + possibility_base
 
-        f = open('save_path/record.txt', 'a')
-        f.write('step ' + str(step) + '\n')
-        f.write('cost ' + str(cost_ret))
-        f.write('\n')
-        line = str(e) + ';' + str(t) + ';' + str(p) + ';' + str(d) + ';' + str(m)
-        f.write('precision ' + line)
-        f.write('\n')
-        f.write('\n')
-        f.close()
+            print(e, t, p, d, m)
 
-        tmp_dir = save_tmp + str(step)
-        os.mkdir(tmp_dir)
-        path = tmp_dir + "/LSTM.ckpt"
-        saver.save(sess, path)
-        # print(sp)
+            f = open('save_path/record.txt', 'a')
+            f.write('step ' + str(step) + '\n')
+            f.write('cost ' + str(cost_ret))
+            f.write('\n')
+            line = str(e) + ';' + str(t) + ';' + str(p) + ';' + str(d) + ';' + str(m)
+            f.write('precision ' + line)
+            f.write('\n')
+            f.write('\n')
+            f.close()
 
-        save_dir = save_path + str(step)
-        util.copy(tmp_dir, save_dir)
+            tmp_dir = save_tmp + str(step)
+            os.mkdir(tmp_dir)
+            path = tmp_dir + "/LSTM.ckpt"
+            saver.save(sess, path)
+            # print(sp)
+
+            save_dir = save_path + str(step)
+            util.copy(tmp_dir, save_dir)
 
         step += 1
 
         now = datetime.datetime.now()
         print(step, "end load data:", now.strftime(time_style))
 
-# if step == 30:
-#     break
+        # if step == 30:
+        #     break
 
-# print(sess.run(weights))
-# save_path = saver.save(sess, "save_path/LSTM.ckpt")
-# print ('Save to path', save_path)
+        # print(sess.run(weights))
+        # save_path = saver.save(sess, "save_path/LSTM.ckpt")
+        # print ('Save to path', save_path)

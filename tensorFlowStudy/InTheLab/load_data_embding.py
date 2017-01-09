@@ -3,13 +3,14 @@
 # _project_: load_data_embding
 # _date_ = 16/12/11 下午7:31
 
-train = "/Users/hou/Documents/data/embding/train/"
+# train = "/Users/hou/Documents/data/embding/train/"
+train = "/Users/hou/Documents/data/embding/chongfu2/train/"
 # train = "/Users/hou/Documents/data/embding/all/"
 # train = "/Users/hou/Documents/data/embding/train2/"
 # root = "/Users/hou/Documents/data/embding/train5000/"
 
-test = "/Users/hou/Documents/data/embding/test/"
-dev = "/Users/hou/Documents/data/embding/dev/"
+test = "/Users/hou/Documents/data/embding/chongfu2/test/"
+dev = "/Users/hou/Documents/data/embding/chongfu2/dev/"
 
 import os
 import random
@@ -17,15 +18,15 @@ import numpy as np
 
 
 def all_train_filename():
-    return os.listdir(r'/Users/hou/Documents/data/embding/train/')
+    return os.listdir(r'/Users/hou/Documents/data/embding/chongfu2/train/')
 
 
 def all_test_filename():
-    return os.listdir(r'/Users/hou/Documents/data/embding/test/')
+    return os.listdir(r'/Users/hou/Documents/data/embding/chongfu2/test/')
 
 
 def all_dev_filename():
-    return os.listdir(r'/Users/hou/Documents/data/embding/dev/')
+    return os.listdir(r'/Users/hou/Documents/data/embding/chongfu2/dev/')
 
 
 def read(filename, root):
@@ -367,11 +368,15 @@ def get_dev_embedding_batches(n=3):
 
 # work()
 
-# words, events, types, polarities, degrees, modalities = get_batches(3)
-# print(events.shape)
-# print(types.shape)
-# print(polarities.shape)
-# print(degrees.shape)
-# print(modalities.shape)
-# # print(words)
-# print(words.shape)
+# i=0
+# while i < 100:
+#     words, events, types, polarities, degrees, modalities = get_train_batches(1)
+#     print(events.shape)
+#     print(types.shape)
+#     print(polarities.shape)
+#     print(degrees.shape)
+#     print(modalities.shape)
+#     # print(words)
+#     print(words.shape)
+#
+#     i=i+1
