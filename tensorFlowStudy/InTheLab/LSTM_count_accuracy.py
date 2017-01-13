@@ -32,7 +32,7 @@ batch_size = 280
 
 # n_inputs = 28  # MNIST data input (img shape: 28*28) 每一行有28个元素
 # n_steps = 28  # time steps 一共是28行
-n_hidden_units = 128  # neurons in hidden layer
+n_hidden_units = 256  # neurons in hidden layer
 # n_classes = 10  # MNIST classes (0-9 digits)
 
 # 单词种类,pos 种类,ne 种类

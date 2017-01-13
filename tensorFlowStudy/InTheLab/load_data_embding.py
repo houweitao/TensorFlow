@@ -9,7 +9,7 @@ train = "/Users/hou/Documents/data/embding/chongfu2/train/"
 # train = "/Users/hou/Documents/data/embding/train2/"
 # root = "/Users/hou/Documents/data/embding/train5000/"
 
-test = "/Users/hou/Documents/data/embding/chongfu2/test/"
+test = "/Users/hou/Documents/data/embding/test/"
 dev = "/Users/hou/Documents/data/embding/chongfu2/dev/"
 
 import os
@@ -22,7 +22,7 @@ def all_train_filename():
 
 
 def all_test_filename():
-    return os.listdir(r'/Users/hou/Documents/data/embding/chongfu2/test/')
+    return os.listdir(r'/Users/hou/Documents/data/embding/test/')
 
 
 def all_dev_filename():

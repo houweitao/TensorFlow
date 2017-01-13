@@ -215,10 +215,10 @@ def run_re(low, high):
             f.write('\n')
             f.close()
 
-            count += 1
+            count += 10
 
 
 # run_re(72, 357)
 # run_re(989, 990)
-run_re(250, 251)
+run_re(0, 761)
 # run_once("save_path/10.bak/LSTM.ckpt")
